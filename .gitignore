@@ -1,0 +1,6 @@
+.ipynb_checkpoints/
+chromedriver-mac-arm64
+.venv/
+venv/
+*.csv
+.DS_Store
