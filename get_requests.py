@@ -5,6 +5,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 
+# Function to check if request is an actual URL or embedded data
+def is_embedded_data(request_url):
+    # Check if the URL starts with "data:"
+    if request_url.startswith('data:'):
+        return True
+    return False
+
 # Path to chromedriver 
 # (download from https://googlechromelabs.github.io/chrome-for-testing/)
 chromedriver_path = 'chromedriver-mac-arm64/chromedriver'
@@ -54,8 +61,9 @@ with open("requests.csv", mode="w", newline='', encoding='utf-8') as file:
     writer.writerow(["Page", "Method", "URL"])
     # writer.writerow(["Method", "URL", "Headers"])
     for request in requests:
-        writer.writerow([url, request["method"], request["url"]])
-        # writer.writerow([request["method"], request["url"], json.dumps(request["headers"])])
+        if not is_embedded_data(request["url"]):
+            writer.writerow([url, request["method"], request["url"]])
+            # writer.writerow([request["method"], request["url"], json.dumps(request["headers"])])
 
 # Quit the driver
 driver.quit()
