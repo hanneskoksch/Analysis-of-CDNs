@@ -7,6 +7,10 @@ from selenium.webdriver.chrome.options import Options
 import tldextract
 import pandas as pd
 from colorama import Fore, Style
+from selenium.common.exceptions import WebDriverException
+
+
+start_time = time.time()
 
 
 # Function to check if request is an actual URL or embedded data
@@ -42,6 +46,9 @@ driver.set_script_timeout(10)
 
 # List to store all requests
 all_requests = []
+
+# List to store all script statistics
+script_statistics_errors = []
 
 # Import dataset
 file_path = "sample_dataset.csv"
@@ -81,9 +88,14 @@ for index, row in enumerate(df.itertuples(), start=0):
                         # "headers": headers
                     }
                 )
-    except Exception as e:
-        print(Fore.RED + f"Error fetching URL {url}: {e}")
-        print(Style.RESET_ALL)
+    except WebDriverException as e:
+        print(Fore.RED + f"Error fetching URL {url}: {e.msg}" + Style.RESET_ALL)
+        script_statistics_errors.append(
+            {
+                "page": url,
+                "error": e.msg,
+            }
+        )
         continue
 
 
@@ -108,3 +120,20 @@ with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
 
 # Quit the driver
 driver.quit()
+
+end_time = time.time()
+
+# Summarize and save script statistics to json file
+with open("script_statistics_errors.json", "w") as file:
+    start_time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))
+    end_time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))
+    time_taken = end_time - start_time
+    time_taken_str = time.strftime("%H:%M:%S", time.gmtime(time_taken))
+    statistics = {
+        "number_of_errors": len(script_statistics_errors),
+        "time_taken": time_taken_str,
+        "start_time": start_time_str,
+        "end_time": end_time_str,
+        "errors": script_statistics_errors,
+    }
+    json.dump(statistics, file, indent=4)
