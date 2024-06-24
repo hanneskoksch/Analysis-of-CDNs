@@ -10,6 +10,14 @@ from colorama import Fore, Style
 from selenium.common.exceptions import WebDriverException
 
 
+# Constants
+TIMEOUT_SECONDS = 10
+DATASET_PATH = "202405.csv"
+# Path to chromedriver
+# (download from https://googlechromelabs.github.io/chrome-for-testing/)
+CHROMEDRIVER_PATH = "chromedriver-mac-arm64/chromedriver"
+
+
 start_time = time.time()
 
 
@@ -21,10 +29,6 @@ def is_embedded_data(request_url):
     return False
 
 
-# Path to chromedriver
-# (download from https://googlechromelabs.github.io/chrome-for-testing/)
-chromedriver_path = "chromedriver-mac-arm64/chromedriver"
-
 # Setup Chrome options
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -35,14 +39,14 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
 # Start WebDriver
-service = ChromeService(chromedriver_path)
+service = ChromeService(CHROMEDRIVER_PATH)
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # Set timeouts
 # Timeout for page load
-driver.set_page_load_timeout(10)
+driver.set_page_load_timeout(TIMEOUT_SECONDS)
 # Timeout for script execution
-driver.set_script_timeout(10)
+driver.set_script_timeout(TIMEOUT_SECONDS)
 
 # List to store all requests
 all_requests = []
@@ -51,8 +55,7 @@ all_requests = []
 script_statistics_errors = []
 
 # Import dataset
-file_path = "sample_dataset.csv"
-df = pd.read_csv(file_path)
+df = pd.read_csv(DATASET_PATH)
 
 # Loop through each URL in the dataset
 for index, row in enumerate(df.itertuples(), start=0):
@@ -64,7 +67,7 @@ for index, row in enumerate(df.itertuples(), start=0):
         # Visit the URL
         driver.get(url)
         # Wait for the page to load and requests to complete
-        time.sleep(2)
+        time.sleep(TIMEOUT_SECONDS)
 
         # Get performance logs
         logs = driver.get_log("performance")
