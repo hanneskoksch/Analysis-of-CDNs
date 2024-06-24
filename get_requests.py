@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 import tldextract
 import pandas as pd
+from colorama import Fore, Style
 
 
 # Function to check if request is an actual URL or embedded data
@@ -33,6 +34,12 @@ chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 service = ChromeService(chromedriver_path)
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
+# Set timeouts
+# Timeout for page load
+driver.set_page_load_timeout(10)
+# Timeout for script execution
+driver.set_script_timeout(10)
+
 # List to store all requests
 all_requests = []
 
@@ -40,39 +47,45 @@ all_requests = []
 file_path = "sample_dataset.csv"
 df = pd.read_csv(file_path)
 
-
+# Loop through each URL in the dataset
 for index, row in enumerate(df.itertuples(), start=0):
     url = row.origin
     print(f"Fetching url {
           index+1} of {len(df)} - ({url})")
 
-    # Visit the URL
-    driver.get(url)
-    # Wait for the page to load and requests to complete
-    time.sleep(2)
+    try:
+        # Visit the URL
+        driver.get(url)
+        # Wait for the page to load and requests to complete
+        time.sleep(2)
 
-    # Get performance logs
-    logs = driver.get_log("performance")
+        # Get performance logs
+        logs = driver.get_log("performance")
 
-    # Process logs and extract request details
-    for entry in logs:
-        log = json.loads(entry["message"])["message"]
-        if log["method"] == "Network.requestWillBeSent":
-            request = log["params"]["request"]
-            method = request["method"]
-            request_url = request["url"]
-            # headers = request['headers']
-            all_requests.append(
-                {
-                    "page": url,
-                    "method": method,
-                    "full_url": request_url,
-                    "subdomain": tldextract.extract(request_url).subdomain,
-                    "domain": tldextract.extract(request_url).domain,
-                    "suffix": tldextract.extract(request_url).suffix,
-                    # "headers": headers
-                }
-            )
+        # Process logs and extract request details
+        for entry in logs:
+            log = json.loads(entry["message"])["message"]
+            if log["method"] == "Network.requestWillBeSent":
+                request = log["params"]["request"]
+                method = request["method"]
+                request_url = request["url"]
+                # headers = request['headers']
+                all_requests.append(
+                    {
+                        "page": url,
+                        "method": method,
+                        "full_url": request_url,
+                        "subdomain": tldextract.extract(request_url).subdomain,
+                        "domain": tldextract.extract(request_url).domain,
+                        "suffix": tldextract.extract(request_url).suffix,
+                        # "headers": headers
+                    }
+                )
+    except Exception as e:
+        print(Fore.RED + f"Error fetching URL {url}: {e}")
+        print(Style.RESET_ALL)
+        continue
+
 
 # Save requests to a CSV file
 with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
