@@ -2,5 +2,5 @@
 chromedriver-mac-arm64
 .venv/
 venv/
-*.csv
+requests.csv
 .DS_Store

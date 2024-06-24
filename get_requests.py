@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 import tldextract
+import pandas as pd
 
 
 # Function to check if request is an actual URL or embedded data
@@ -35,28 +36,20 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 # List to store all requests
 all_requests = []
 
-# Define the URL to visit
-most_popular_website_urls = [
-    "https://www.google.com",
-    "https://www.youtube.com",
-    "https://www.facebook.com",
-    "https://www.baidu.com",
-    "https://www.wikipedia.org",
-    "https://www.qq.com",
-    "https://www.taobao.com",
-    "https://www.tmall.com",
-    "https://www.yahoo.com",
-    "https://www.amazon.com",
-]
+# Import dataset
+file_path = "sample_dataset.csv"
+df = pd.read_csv(file_path)
 
-for index, url in enumerate(most_popular_website_urls):
+
+for index, row in enumerate(df.itertuples(), start=0):
+    url = row.origin
     print(f"Fetching url {
-          index+1} of {len(most_popular_website_urls)} - ({url})")
+          index+1} of {len(df)} - ({url})")
 
     # Visit the URL
     driver.get(url)
     # Wait for the page to load and requests to complete
-    time.sleep(10)
+    time.sleep(2)
 
     # Get performance logs
     logs = driver.get_log("performance")
