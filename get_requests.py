@@ -56,15 +56,6 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 # Enable performance logging for insights into network requests
 chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
-# Start WebDriver
-service = ChromeService(CHROMEDRIVER_PATH)
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-# Set timeouts
-# Timeout for page load
-driver.set_page_load_timeout(TIMEOUT_SECONDS)
-# Timeout for script execution
-driver.set_script_timeout(TIMEOUT_SECONDS)
 
 # List to store all network responses
 all_responses = []
@@ -79,8 +70,19 @@ for index, row in enumerate(df.itertuples(), start=0):
           index+1} of {len(df)} - ({url})")
 
     try:
+        # Start WebDriver
+        service = ChromeService(CHROMEDRIVER_PATH)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # Set timeouts
+        # Timeout for page load
+        driver.set_page_load_timeout(TIMEOUT_SECONDS)
+        # Timeout for script execution
+        driver.set_script_timeout(TIMEOUT_SECONDS)
+
         # Visit the URL
         driver.get(url)
+
         # Wait for the page to load and requests to complete
         time.sleep(TIMEOUT_SECONDS)
 
@@ -109,6 +111,9 @@ for index, row in enumerate(df.itertuples(), start=0):
                         "response_headers": response_headers,
                     }
                 )
+        # Quit the driver
+        driver.quit()
+
     except WebDriverException as e:
         print(Fore.RED + f"Error fetching URL {url}: {e.msg}" + Style.RESET_ALL)
         script_statistics_errors.append(
@@ -117,6 +122,9 @@ for index, row in enumerate(df.itertuples(), start=0):
                 "error": e.msg,
             }
         )
+        # Ensure the driver is quit after an exception
+        driver.quit()
+        # Skip to the next URL
         continue
 
 
@@ -148,8 +156,6 @@ with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
                 ]
             )
 
-# Quit the driver
-driver.quit()
 
 end_time = time.time()
 
