@@ -9,7 +9,7 @@ import tldextract
 import pandas as pd
 from colorama import Fore, Style
 from selenium.common.exceptions import WebDriverException
-from helper import get_cname
+from helper import get_cname, get_asn_description
 
 # Constants
 TIMEOUT_SECONDS = 10
@@ -101,6 +101,7 @@ for index, row in enumerate(df.itertuples(), start=0):
                     tldextract.extract(request_url).registered_domain
                 )
                 cname = get_cname(request_url)
+                asn_description, asn = get_asn_description(ip_address)
                 all_responses.append(
                     {
                         "page": url,
@@ -110,6 +111,8 @@ for index, row in enumerate(df.itertuples(), start=0):
                         "suffix": tldextract.extract(request_url).suffix,
                         "ip": ip_address,
                         "cname": cname,
+                        "asn": asn,
+                        "asn_description": asn_description,
                         "response_headers": response_headers,
                     }
                 )
@@ -142,6 +145,8 @@ with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
             "Suffix",
             "IP",
             "CNAME",
+            "ASN",
+            "ASN Description",
             "Response Headers",
         ]
     )
@@ -156,6 +161,8 @@ with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
                     request["suffix"],
                     request["ip"],
                     request["cname"],
+                    request["asn"],
+                    request["asn_description"],
                     request["response_headers"],
                 ]
             )
