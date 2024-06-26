@@ -1,6 +1,7 @@
 import csv
 import json
 import time
+import socket
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
@@ -20,6 +21,9 @@ CHROMEDRIVER_PATH = "chromedriver-mac-arm64/chromedriver"
 
 start_time = time.time()
 
+# List to store all script statistics
+script_statistics_errors = []
+
 
 # Function to check if request is an actual URL or embedded data
 def is_embedded_data(request_url):
@@ -27,6 +31,20 @@ def is_embedded_data(request_url):
     if request_url.startswith("data:"):
         return True
     return False
+
+
+# Function to get IP address from domain
+def get_ip_address(domain):
+    try:
+        return socket.gethostbyname(domain)
+    except socket.gaierror as e:
+        script_statistics_errors.append(
+            {
+                "domain": domain,
+                "error": str(e),
+            }
+        )
+        return None
 
 
 # Setup Chrome options
@@ -50,9 +68,6 @@ driver.set_script_timeout(TIMEOUT_SECONDS)
 
 # List to store all requests
 all_requests = []
-
-# List to store all script statistics
-script_statistics_errors = []
 
 # Import dataset
 df = pd.read_csv(DATASET_PATH)
@@ -80,6 +95,9 @@ for index, row in enumerate(df.itertuples(), start=0):
                 method = request["method"]
                 request_url = request["url"]
                 # headers = request['headers']
+                ip_address = get_ip_address(
+                    tldextract.extract(request_url).registered_domain
+                )
                 all_requests.append(
                     {
                         "page": url,
@@ -89,6 +107,7 @@ for index, row in enumerate(df.itertuples(), start=0):
                         "domain": tldextract.extract(request_url).domain,
                         "suffix": tldextract.extract(request_url).suffix,
                         # "headers": headers
+                        "ip": ip_address,
                     }
                 )
     except WebDriverException as e:
@@ -105,7 +124,9 @@ for index, row in enumerate(df.itertuples(), start=0):
 # Save requests to a CSV file
 with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
-    writer.writerow(["Page", "Method", "Full URL", "Subdomain", "Domain", "Suffix"])
+    writer.writerow(
+        ["Page", "Method", "Full URL", "Subdomain", "Domain", "Suffix", "IP"]
+    )
     # writer.writerow(["Method", "URL", "Headers"])
     for request in all_requests:
         if not is_embedded_data(request["full_url"]):
@@ -117,6 +138,7 @@ with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
                     request["subdomain"],
                     request["domain"],
                     request["suffix"],
+                    request["ip"],
                 ]
             )
             # writer.writerow([request["method"], request["url"], json.dumps(request["headers"])])
