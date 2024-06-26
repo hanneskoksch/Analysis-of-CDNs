@@ -66,8 +66,8 @@ driver.set_page_load_timeout(TIMEOUT_SECONDS)
 # Timeout for script execution
 driver.set_script_timeout(TIMEOUT_SECONDS)
 
-# List to store all requests
-all_requests = []
+# List to store all network responses
+all_responses = []
 
 # Import dataset
 df = pd.read_csv(DATASET_PATH)
@@ -87,27 +87,26 @@ for index, row in enumerate(df.itertuples(), start=0):
         # Get performance logs
         logs = driver.get_log("performance")
 
-        # Process logs and extract request details
+        # Process logs and extract details
         for entry in logs:
             log = json.loads(entry["message"])["message"]
-            if log["method"] == "Network.requestWillBeSent":
-                request = log["params"]["request"]
-                method = request["method"]
+            # Check if log entry is a network response
+            if log["method"] == "Network.responseReceived":
+                request = log["params"]["response"]
                 request_url = request["url"]
-                # headers = request['headers']
+                response_headers = log["params"]["response"]["headers"]
                 ip_address = get_ip_address(
                     tldextract.extract(request_url).registered_domain
                 )
-                all_requests.append(
+                all_responses.append(
                     {
                         "page": url,
-                        "method": method,
                         "full_url": request_url,
                         "subdomain": tldextract.extract(request_url).subdomain,
                         "domain": tldextract.extract(request_url).domain,
                         "suffix": tldextract.extract(request_url).suffix,
-                        # "headers": headers
                         "ip": ip_address,
+                        "response_headers": response_headers,
                     }
                 )
     except WebDriverException as e:
@@ -125,23 +124,29 @@ for index, row in enumerate(df.itertuples(), start=0):
 with open("requests.csv", mode="w", newline="", encoding="utf-8") as file:
     writer = csv.writer(file)
     writer.writerow(
-        ["Page", "Method", "Full URL", "Subdomain", "Domain", "Suffix", "IP"]
+        [
+            "Page",
+            "Full URL",
+            "Subdomain",
+            "Domain",
+            "Suffix",
+            "IP",
+            "Response Headers",
+        ]
     )
-    # writer.writerow(["Method", "URL", "Headers"])
-    for request in all_requests:
+    for request in all_responses:
         if not is_embedded_data(request["full_url"]):
             writer.writerow(
                 [
                     request["page"],
-                    request["method"],
                     request["full_url"],
                     request["subdomain"],
                     request["domain"],
                     request["suffix"],
                     request["ip"],
+                    request["response_headers"],
                 ]
             )
-            # writer.writerow([request["method"], request["url"], json.dumps(request["headers"])])
 
 # Quit the driver
 driver.quit()
