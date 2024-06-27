@@ -4,3 +4,4 @@ chromedriver-mac-arm64
 venv/
 requests.csv
 .DS_Store
+__pycache__/
