@@ -1,4 +1,31 @@
-# Python virtual environemnt
+
+
+# Analyzing the role of CDNs in web traffic
+
+This work was part of the lecture *Internet Traffic, Performance and Content Distribution* at *Hochschule der Medien Stuttgart* in summer term 2024. 
+
+
+
+## Important files
+
+* `Analyzing_the_role_of_CDNs_in_web_traffic.pdf`
+  The paper
+* `Analysis.ipynb`
+  The analysis as Jupyter Notebook
+* `Analysis.html`
+  The analysis as HTML
+* `requests_28_06_2024.csv`
+  The most up do date requests record
+* `202405.csv`
+  The CrUX dataset from may 2024
+
+
+
+## Python commands
+
+
+
+### Python virtual environemnt
 
 https://python.land/virtual-environments/virtualenv
 
@@ -26,7 +53,9 @@ Delete:
 rm -r venv
 ```
 
-# Requirements
+
+
+### Requirements
 
 https://python.land/virtual-environments/installing-packages-with-pip
 
@@ -42,7 +71,9 @@ Set requirements:
 pip freeze > requirements.txt
 ```
 
-# Others
+
+
+### Steps to start Jupyter Notebook
 
 ```bash
 python -m venv venv
